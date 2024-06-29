@@ -1,4 +1,8 @@
 using StaticArrays
+using POMDPs
+using POMDPModels
+using POMDPTools
+using Random
 
 const GWPos = SVector{2,Int}
 
@@ -8,11 +12,25 @@ const GWPos = SVector{2,Int}
 
 Base.@kwdef struct GeoSteering <: MDP{GWPos, Symbol}
     size::Tuple{Int, Int}           = (10,10)
-    rewards::Dict{GWPos, Float64}   = Dict(GWPos(4,3)=>-10.0, GWPos(4,6)=>-5.0, GWPos(9,3)=>10.0, GWPos(8,8)=>3.0)
-    faults::Set{GWPos}               = Set([GWPos(1,1), GWPos(1,2), GWPos(1,3), GWPos(1,4), GWPos(1,5), GWPos(1,6), GWPos(1,7), GWPos(1,8), GWPos(1,9), GWPos(1,10), GWPos(2,1), GWPos(2,10), GWPos(3,1), GWPos(3,10), GWPos(4,1), GWPos(4,10), GWPos(5,1), GWPos(5,10), GWPos(6,1), GWPos(6,10), GWPos(7,1), GWPos(7,10), GWPos(8,1), GWPos(8,10), GWPos(9,1), GWPos(9,10), GWPos(10,1), GWPos(10,2), GWPos(10,3), GWPos(10,4), GWPos(10,5), GWPos(10,6), GWPos(10,7), GWPos(10,8), GWPos(10,9), GWPos(10,10)])
-    terminate_from::Set{GWPos}      = Set(keys(rewards))
-    tprob::Float64                  = 0.7
-    discount::Float64               = 0.95
+    goals::Dict{GWPos, Float64}   = Dict(
+        GWPos(10,6)=> 5, GWPos(10,5)=>10,
+    )
+    blocks::Dict{GWPos, Float64} = Dict(
+        GWPos(1,1)=>-10.0, GWPos(1,2)=>-10.0, GWPos(1,3)=>-10.0, GWPos(1,4)=>-10.0, GWPos(1,6)=>-10.0, GWPos(1,7)=>-10.0, GWPos(1,8)=>-10.0, GWPos(1,9)=>-10.0, GWPos(1,10)=>-10.0,
+        GWPos(2, 1)=>-10, GWPos(2, 2)=>-10.0, GWPos(2,3)=>-10.0, GWPos(2,4)=>-10.0, GWPos(2,7)=>-10.0, GWPos(2,8)=>-10.0, GWPos(2,9)=>-10.0, GWPos(2,10)=>-10.0,
+        GWPos(3, 1)=>-10, GWPos(3, 2)=>-10.0, GWPos(3,3)=>-10.0, GWPos(3,4)=>-10.0, GWPos(3,7)=>-10.0, GWPos(3,8)=>-10.0, GWPos(3,9)=>-10.0, GWPos(3,10)=>-10.0,
+        GWPos(4, 1)=>-10, GWPos(4, 2)=>-10.0, GWPos(4,3)=>-10.0, GWPos(4,4)=>-10.0, GWPos(4,8)=>-10.0, GWPos(4,9)=>-10.0, GWPos(4,10)=>-10.0,
+        GWPos(5, 1)=>-10, GWPos(5, 2)=>-10.0, GWPos(5,3)=>-10.0, GWPos(5,4)=>-10.0, GWPos(5,5)=>-10.0, GWPos(5,8)=>-10.0, GWPos(5,9)=>-10.0, GWPos(5,10)=>-10.0,
+        GWPos(6, 1)=>-10, GWPos(6, 2)=>-10.0, GWPos(6,3)=>-10.0, GWPos(6,4)=>-10.0, GWPos(6,5)=>-10.0, GWPos(6,9)=>-10.0, GWPos(6,10)=>-10.0,
+        GWPos(7, 1)=>-10, GWPos(7, 2)=>-10.0, GWPos(7,3)=>-10.0, GWPos(7,4)=>-10.0, GWPos(7,5)=>-10.0, GWPos(7,6)=>-10.0, GWPos(7,9)=>-10.0, GWPos(7,10)=>-10.0,
+        GWPos(8, 1)=>-10, GWPos(8, 2)=>-10.0, GWPos(8,3)=>-10.0, GWPos(8,4)=>-10.0, GWPos(8,5)=>-10.0, GWPos(8,6)=>-10.0, GWPos(8,9)=>-10.0, GWPos(8,10)=>-10.0,
+        GWPos(9, 1)=>-10, GWPos(9, 2)=>-10.0, GWPos(9,3)=>-10.0, GWPos(9,4)=>-10.0, GWPos(9,9)=>-10.0, GWPos(9,10)=>-10.0,
+        GWPos(10,1)=>-10.0, GWPos(10,2)=>-10.0, GWPos(10,3)=>-10.0, GWPos(10,4)=>-10.0, GWPos(10,7)=>-10.0, GWPos(10,8)=>-10.0, GWPos(10,9)=>-10.0, GWPos(10,10)=>-10.0,
+        )
+    rewards::Dict{GWPos, Float64}   = merge(goals)
+    terminate_from::Set{GWPos}      = Set(keys(goals))
+    tprob::Float64                  = 0.999
+    discount::Float64               = 0.9
 end
 
 # States
@@ -97,9 +115,10 @@ end
 
 function inbounds(m::GeoSteering, s::AbstractVector{Int})
     #considers faults as boundaries
-    return 1 <= s[1] <= m.size[1] && 1 <= s[2] <= m.size[2] && !(GWPos(s[1], s[2]) in m.faults)
-end
+    # return 1 <= s[1] <= m.size[1] && 1 <= s[2] <= m.size[2] #&& !(GWPos(s[1], s[2]) in m.blocks) 
+    return 1 <= s[1] <= m.size[1] && 1 <= s[2] <= m.size[2] && !([s[1], s[2]] in keys(gs.blocks))
 
+end
 
 
 

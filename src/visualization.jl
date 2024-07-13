@@ -1,6 +1,3 @@
-using Compose
-using ColorSchemes
-
 function render(mdp::GeoSteering, step::Union{NamedTuple,Dict}=(;);
     color=s -> reward(mdp, s),
     policy::Union{Policy,Nothing}=nothing,

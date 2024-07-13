@@ -64,7 +64,9 @@ function POMDPs.pdf(d::GWUniform, s::GWPos)
 end
 POMDPs.support(d::GWUniform) = (GWPos(x, y) for x in 1:d.size[1], y in 1:d.size[2])
 
-POMDPs.initialstate(mdp::GeoSteering) = GWUniform(mdp.size)
+# POMDPs.initialstate(mdp::GeoSteering) = GWUniform(mdp.size)
+# initial state can only be at GWPos(1,5) or GWPos(2,5)
+POMDPs.initialstate(mdp::GeoSteering) = Deterministic(GWPos(1,5))
 
 
 # Actions

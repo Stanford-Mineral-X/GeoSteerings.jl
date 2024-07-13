@@ -1,7 +1,9 @@
 using MCTS
+using GeoSteeringPOMDPs
+using POMDPs
+using POMDPSimulators
+using POMDPTools
 
-include("geosteering.jl")
-include("visualization.jl")
 
 gs = GeoSteering()
 

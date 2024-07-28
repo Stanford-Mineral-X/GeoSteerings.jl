@@ -26,4 +26,8 @@ endif
 install: install_julia
 	julia $(JULIA_PROJECT) -e 'using Pkg; Pkg.instantiate()'
 
-all: install_julia install sim
+test:
+	julia $(JULIA_PROJECT) test/test_geosteering.jl
+	julia $(JULIA_PROJECT) test/test_mdp.jl
+	
+all: install test

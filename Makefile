@@ -23,7 +23,7 @@ else
 	@echo "Julia is already installed at $(JULIA_BIN)"
 endif
 
-install: install_julia
+install: instantiate
 	julia $(JULIA_PROJECT) -e 'using Pkg; Pkg.instantiate()'
 
 test:

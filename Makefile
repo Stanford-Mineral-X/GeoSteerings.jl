@@ -27,7 +27,6 @@ install:
 	julia $(JULIA_PROJECT) -e 'using Pkg; Pkg.instantiate()'
 
 test:
-	julia $(JULIA_PROJECT) test/test_geosteering.jl
-	julia $(JULIA_PROJECT) test/test_mdp.jl
+	julia $(JULIA_PROJECT) --code-coverage test/runtests.jl
 	
 all: install test

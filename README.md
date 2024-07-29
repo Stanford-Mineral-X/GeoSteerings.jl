@@ -45,11 +45,11 @@ hr = HistoryRecorder(max_steps=100, rng=MersenneTwister(1))
 hist = simulate(hr, gs, policy)
 
 # Visualize the simulation result
-plot2 = ender(gs, hist)
+plot2 = render(gs, hist)
 savefig(plot2, gs.size, "../figs/GeoSteeringPolicyExample.pdf")
 ```
 
-This MDP example is also available in the [GeoSteeringMDP notebook](../notebooks/GeoSteeringMDP.ipynb) or [example.jl file](../examples/example.jl)
+This MDP examples include [GeoSteeringMDP](https://github.com/mansurarief/GeoSteerings.jl/blob/main/notebooks/GeoSteeringMDP.ipynb) and [larger GeoSteeringMDP](https://github.com/mansurarief/GeoSteerings.jl/blob/main/notebooks/GeoSteeringMDP_larger.ipynb)
 
 ## POMDP Example
 

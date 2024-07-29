@@ -82,7 +82,7 @@ function POMDPs.reward(mdp::GeoSteeringMDP, s::State, a::Action, sp::State)
         return 0.0
     end
 
-    if sp in mdp.target_zone 
+    if sp.cell in mdp.target_zone 
         if !s.is_surface_visited[sp.cell[1]]
             return mdp.reward_target
         else

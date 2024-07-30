@@ -8,8 +8,11 @@ JULIA_URL = https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-$(JULIA_V
 main:
 	julia --project=. examples/main.jl
 
-sim:
-	julia --project=. examples/example.jl
+mdp:
+	julia --project=. examples/mdp_example.jl
+
+pomdp:
+	julia --project=. examples/pomdp_example.jl
 
 install_julia:
 ifeq ($(JULIA_BIN),)

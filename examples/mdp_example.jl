@@ -8,6 +8,7 @@ include("../src/geosteering.jl")
 include("../src/mdp.jl")
 include("../src/utils.jl")
 
+
 rng = MersenneTwister(1)
 gs = initialize_mdp(
     rng=rng, size=(5, 5), 
@@ -29,7 +30,7 @@ qlearning = QLearningSolver(exploration_policy=exploration_policy, learning_rate
 
 # simulate the policy
 hr = HistoryRecorder(max_steps=10, rng=rng)
-figs_dir = "../figs"
+figs_dir = "figs"
 for (policy_num, policy) in enumerate([QLpolicy, MCTSpolicy])
     @time hist = simulate(hr, gs, policy)
     
@@ -46,5 +47,5 @@ for (policy_num, policy) in enumerate([QLpolicy, MCTSpolicy])
     [savefig(plot_sim_steps[i], gs.size, joinpath(figs_dir, "SimRollout$i.png")) for i in 1:length(hist)];
     #get policy NamedTuple
     policy_name = string(policy)
-    create_gif_from_images(dir=figs_dir, gif_name="SimPolicy$(policy_num).gif", fps=2, num_steps=length(hist))
+    create_gif_from_images(dir=figs_dir, gif_name="MDPPolicy$(policy_num).gif", fps=2, num_steps=length(hist))
 end

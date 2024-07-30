@@ -278,7 +278,7 @@ function initialize_pomdp(;
     target_thickness::Float64      = 2.0,  # Thickness of the target zone
     drift_prob::Float64             = 0.3,  # Probability of drifting
     discount::Float64               = 0.95, # Discount factor
-    reward_target::Float64         = 100.0,
+    reward_target::Float64         = 0.0,
     reward_offtarget::Float64      = -100.0,
     rng::AbstractRNG                = Random.GLOBAL_RNG
 )

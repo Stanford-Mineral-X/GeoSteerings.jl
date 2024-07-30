@@ -26,6 +26,7 @@ export
     Cell, 
     Action,
     State,
+    Observation,
     GeoSteeringMDP,
     generate_all_zones,
     get_amplitude_and_frequency,
@@ -35,9 +36,12 @@ export
     is_in_target_or_connection_needed,
     inbounds,
     initialize_mdp,
+    move,
     dir,
     aarrow,
-    aind
+    aind,
+    GeoSteeringPOMDP,
+    initialize_pomdp
 include("geosteering.jl")
 
 export 

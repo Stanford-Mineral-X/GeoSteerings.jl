@@ -16,8 +16,6 @@ using POMDPModels
 using Parameters
 using Cairo
 using Fontconfig
-using Images
-using ImageIO
 using Plots
 using Test
 using Revise
@@ -41,7 +39,10 @@ export
     aarrow,
     aind,
     GeoSteeringPOMDP,
-    initialize_pomdp
+    initialize_pomdp,
+    get_surrounding_status_combinations,
+    get_surrounding_status,
+    very_similar
 include("geosteering.jl")
 
 export 
@@ -58,4 +59,4 @@ export
     create_gif_from_images
 include("utils.jl")
 
-end # module
+end # module GeoSteerings

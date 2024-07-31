@@ -2,22 +2,22 @@ function POMDPs.states(mdp::Union{GeoSteeringMDP, GeoSteeringPOMDP})
     cells = [[Cell(x, y) for x in 1:mdp.size[1], y in 1:mdp.size[2]]...]
     push!(cells, Cell(-1, -1))
     
-    bool_val = [false for _ in 1:mdp.size[1]]   
-    surface_visited = [deepcopy(bool_val) for _ in 1:mdp.size[1]+1]
-    push!(deepcopy(surface_visited), bool_val)
+    bool_vals = [false for _ in 1:mdp.size[1]]   
+    valid_surf_stats = [deepcopy(bool_vals) for _ in 1:mdp.size[1]+1]
+    push!(deepcopy(valid_surf_stats), bool_vals)
     
     for i in 1:mdp.size[1]
-        surface_visited[i+1][1:i] .= true
+        valid_surf_stats[i+1][1:i] .= true
     end
 
-    is_surrounding_target = [get_surrounding_status(mdp, cell) for cell in cells[1:end-1]]
+    surrounding_stats = [get_surrounding_status(mdp, cell) for cell in cells[1:end-1]]    
 
-    ss = Vector{State}(undef, length(surface_visited) * length(is_surrounding_target) * length(cells))
+    ss = Vector{State}(undef, length(valid_surf_stats) * length(surrounding_stats) * length(cells))
     index = 1
     for cell in cells
-        for is_visited in surface_visited
-            for surrounding in is_surrounding_target
-                ss[index] = State(cell, is_visited, surrounding)
+        for surf_stat in valid_surf_stats
+            for surrounding_stat in surrounding_stats
+                ss[index] = State(cell, surf_stat, surrounding_stat)
                 index += 1
             end            
         end
@@ -87,6 +87,21 @@ function POMDPs.reward(mdp::Union{GeoSteeringMDP, GeoSteeringPOMDP}, s::State, a
     if isterminal(mdp, s)
         return 0.0
     end
+
+    if sp.cell in mdp.target_zone 
+        if !s.is_surface_visited[sp.cell[1]] # reward for entering the target zone surface first time
+            return mdp.reward_target  
+        end
+    end
+    return mdp.reward_offtarget
+end
+
+function POMDPs.reward(mdp::Union{GeoSteeringMDP, GeoSteeringPOMDP}, s::State, a::Action)
+    if isterminal(mdp, s)
+        return 0.0
+    end
+
+    sp = rand(transition(mdp, s, a))
 
     if sp.cell in mdp.target_zone 
         if !s.is_surface_visited[sp.cell[1]] # reward for entering the target zone surface first time

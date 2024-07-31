@@ -11,27 +11,27 @@ include("../src/utils.jl")
 
 rng = MersenneTwister(1)
 gs = initialize_mdp(
-    rng=rng, size=(5, 5), 
+    rng=rng, size=(4, 4), 
     base_amplitude=1.0, 
     base_frequency=1.0,
     target_thickness=2.0, 
     vertical_shift=3.0,
     drift_prob=0.0001) #no drift_prob
 
-# VIsolver = ValueIterationSolver(max_iterations=10);
-# @time VIpolicy = solve(VIsolver, gs)
+VIsolver = ValueIterationSolver(max_iterations=10);
+@time VIpolicy = solve(VIsolver, gs)
 
 MCTSsolver = MCTSSolver(n_iterations=500, depth=50, exploration_constant=5.0, estimate_value=RolloutEstimator(RandomPolicy(gs)))
 @time MCTSpolicy = solve(MCTSsolver, gs)
 
-exploration_policy = EpsGreedyPolicy(gs, 0.01)
-qlearning = QLearningSolver(exploration_policy=exploration_policy, learning_rate=0.1, n_episodes=1000, max_episode_length=50, eval_every=50, n_eval_traj=100)
+exploration_policy = EpsGreedyPolicy(gs, 0.1)
+qlearning = QLearningSolver(exploration_policy=exploration_policy, learning_rate=0.05, n_episodes=2000, max_episode_length=50, eval_every=100, n_eval_traj=100)
 @time QLpolicy = solve(qlearning, gs)
 
 # simulate the policy
 hr = HistoryRecorder(max_steps=10, rng=rng)
 figs_dir = "figs"
-for (policy_num, policy) in enumerate([QLpolicy, MCTSpolicy])
+for (policy_num, policy) in enumerate([VIpolicy, QLpolicy, MCTSpolicy])
     @time hist = simulate(hr, gs, policy)
     
     # plot and animate the simulation

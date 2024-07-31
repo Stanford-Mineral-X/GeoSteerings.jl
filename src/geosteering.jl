@@ -34,8 +34,21 @@ end
 Base.:(==)(s1::State, s2::State) = s1.cell == s2.cell && s1.is_surface_visited == s2.is_surface_visited && s1.is_surrounding_target == s2.is_surrounding_target
 
 @with_kw mutable struct Observation
-    cell::Cell
     is_surrounding_target::Dict{Cell, Bool}
+end
+
+function very_similar(o1::Observation, o2::Observation; tol=2)
+    o1_surr = o1.is_surrounding_target
+    o2_surr = o2.is_surrounding_target
+    
+    # Early exit if the keys differ
+    if keys(o1_surr) != keys(o2_surr)
+        return false
+    end
+
+    # Count differing values and return false if they exceed the tolerance
+    num_diff = sum(o1_surr[key] != o2_surr[key] for key in keys(o1_surr))
+    return num_diff <= tol
 end
 
 
@@ -89,6 +102,7 @@ end
     discount::Float64               # Discount factor
     reward_target::Float64         # Reward for staying within the target zone
     reward_offtarget::Float64      # Reward for getting out of the target zone
+    similar_obs_prob_multiplier::Float64 # Probability multiplier for true-looking observations
     rng::AbstractRNG                # Random number generator
     target_zone::Set{Cell}         = Set{Cell}() # Set of cells in the target zone
     shale_zone::Set{Cell}           = Set{Cell}() # Set of cells in the shale zone
@@ -195,6 +209,15 @@ function get_surrounding_status(mdp::Union{GeoSteeringMDP, GeoSteeringPOMDP}, ce
     return surrounding_target
 end
 
+function get_surrounding_status_combinations(mdp::Union{GeoSteeringMDP, GeoSteeringPOMDP}, cell::Cell)
+    surr_stat = get_surrounding_status(mdp, cell)
+    surr_cells = collect(keys(surr_stat))
+    bool_vals_comb = [collect(product(fill([false, true], length(surr_cells))...))...]
+    bool_vals_comb_dict = [Dict(zip(surr_cells, bool_vals_comb[i])) for i in 1:length(bool_vals_comb)]
+    return bool_vals_comb_dict
+end
+
+
 
 
 function move(mdp::Union{GeoSteeringMDP, GeoSteeringPOMDP}, s::State, a::Action)
@@ -246,26 +269,6 @@ function initialize_mdp(;
 end
 
 
-@with_kw mutable struct GeoSteeringPOMDP <: POMDP{State, Action, Observation}
-    size::Tuple{Int, Int}           # num_x, num_y
-    base_amplitude::Float64         # Base amplitude of the sinusoidal function
-    base_frequency::Float64         # Base frequency of the sinusoidal function
-    amplitude_variation::Float64    # Variation in amplitude
-    frequency_variation::Float64    # Variation in frequency
-    phase::Float64                  # Phase shift of the sinusoidal function
-    vertical_shift::Float64         # Vertical shift of the sinusoidal function
-    target_thickness::Float64      # Thickness of the target zone
-    drift_prob::Float64             # Probability of drifting
-    discount::Float64               # Discount factor
-    reward_target::Float64         # Reward for staying within the target zone
-    reward_offtarget::Float64      # Reward for getting out of the target zone
-    rng::AbstractRNG                # Random number generator
-    target_zone::Set{Cell}         = Set{Cell}() # Set of cells in the target zone
-    shale_zone::Set{Cell}           = Set{Cell}() # Set of cells in the shale zone
-    nontarget_zone::Set{Cell}      = Set{Cell}() # Set of cells in the non-target zone
-    terminal_zone::Set{Cell}        = Set{Cell}() # Set of cells in the terminal zone
-end
-
 
 function initialize_pomdp(;
     size::Tuple{Int, Int}           = (5, 5),
@@ -280,6 +283,7 @@ function initialize_pomdp(;
     discount::Float64               = 0.95, # Discount factor
     reward_target::Float64         = 0.0,
     reward_offtarget::Float64      = -100.0,
+    similar_obs_prob_multiplier    = 5.0,
     rng::AbstractRNG                = Random.GLOBAL_RNG
 )
     pomdp = GeoSteeringPOMDP(
@@ -295,6 +299,7 @@ function initialize_pomdp(;
         discount=discount,
         reward_target=reward_target,
         reward_offtarget=reward_offtarget,
+        similar_obs_prob_multiplier=similar_obs_prob_multiplier,
         rng=rng
     )
     pomdp.target_zone, pomdp.nontarget_zone, pomdp.shale_zone, pomdp.terminal_zone = generate_all_zones(pomdp)    

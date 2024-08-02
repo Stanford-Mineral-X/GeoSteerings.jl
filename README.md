@@ -7,50 +7,86 @@ This repository contains implementations of GeoSteeringMDP and GeoSteeringPOMDP 
 
 ## MDP Example
 
-![GeoSteeringProblem](./figs/SimPolicyVI.gif)
+![GeoSteeringProblem](./figs/MDPPolicy1_NoDrifting.gif)
 
 ```julia
-include("../src/geosteering.jl")
-include("../src/mdp.jl")
-include("../src/utils.jl")
+using Random
+using POMDPs
+using POMDPTools
+using DiscreteValueIteration
+using GeoSteerings
 
+#set the random seed
 rng = MersenneTwister(1)
+
+#initialize the MDP with tiny drift_prob
 gs = initialize_mdp(
-    rng=rng, size=(10, 10), 
-    base_amplitude=2.0, 
-    target_thickness=3.0, 
-    vertical_shift=5.0,
-    drift_prob=0.01)
+    rng=rng, size=(5, 5), base_amplitude=1.0, 
+    base_frequency=1.0, target_thickness=2.0, 
+    vertical_shift=3.0, drift_prob=0.001) 
 
-# one simulation step example
-p0 = initialstate(gs) # initial state distribution
-s = rand(rng, p0) # initial state s ~ p0
-a = rand(rng, actions(gs)) # random action a0
-p = transition(gs, s, a) # next state distribution p
-sp = rand(rng, p) # next state s ~ p
-r = reward(gs, s, a, sp) # reward r
+VIsolver = ValueIterationSolver(max_iterations=50);
+@time policy = solve(VIsolver, gs)
 
+# simulate the policy
+hr = HistoryRecorder(max_steps=10, rng=rng)
+@time hist = simulate(hr, gs, policy)
 
-#plot the initial state
-plt = render(gs, (s=s,a=a,sp=sp));
-savefig(plt, gs.size, "../figs/MDP-1step-simulation.pdf")
-ing()
+# plot and animate the simulation
+plot_sim_steps = GeoSteerings.render(gs, hist);
+println(length(hist), " steps in the simulation")
+println(length(plot_sim_steps), " plots in the simulation")
 
-# Define the offline policy solver
-solver = ValueIterationSolver(max_iterations=1000)
-policy = solve(solver, gs)
+# save the plots as a pdfs, pngs, and gif
+[GeoSteerings.savefig(plot_sim_steps[i], gs.size, joinpath("figs", "SimRollout$i.pdf")) for i in 1:length(hist)];
+[GeoSteerings.savefig(plot_sim_steps[i], gs.size, joinpath("figs", "SimRollout$i.png")) for i in 1:length(hist)];
+create_gif_from_images(dir=figs_dir, gif_name="MDPPolicy1_NoDrifting.gif", fps=2, num_steps=length(hist))
 
-# Simulate the policy
-hr = HistoryRecorder(max_steps=100, rng=MersenneTwister(1))
-hist = simulate(hr, gs, policy)
-
-# Visualize the simulation result
-plot2 = render(gs, hist)
-savefig(plot2, gs.size, "../figs/GeoSteeringPolicyExample.pdf")
 ```
-
-MDP examples include [GeoSteeringMDP](https://github.com/mansurarief/GeoSteerings.jl/blob/main/notebooks/GeoSteeringMDP.ipynb) and [larger GeoSteeringMDP](https://github.com/mansurarief/GeoSteerings.jl/blob/main/notebooks/GeoSteeringMDP_larger.ipynb).
 
 ## POMDP Example
 
-To be added (TBA).
+![GeoSteeringPOMDPProblem](./figs/POMDPPolicy2_WithDrifting.gif)
+
+```julia
+using ParticleFilters
+using POMCPOW
+using MCTS
+using Random
+using POMDPs
+using POMDPTools
+using GeoSteerings
+
+
+rng = MersenneTwister(1)
+gs = initialize_pomdp(
+    rng=rng, size=(5, 5), base_amplitude=1.0, 
+    base_frequency=1.0, target_thickness=2.0, 
+    vertical_shift=2.0, drift_prob=0.1) #adding some drift_prob
+
+up = BootstrapFilter(gs, 100, rng)
+b0 = ParticleCollection(support(initialize_belief(gs)))
+s0 = rand(rng, initialstate(gs))
+
+solver = POMCPOWSolver(tree_queries=50,criterion=MaxUCB(100.0))
+policy = solve(solver, gs)
+
+hr = HistoryRecorder(max_steps=30, rng=rng)
+@time hist_ = simulate(hr, gs, policy, up, b0)
+
+# plot and animate the simulation
+plot_sim_steps = GeoSteerings.render(gs, hist_);
+plot_sim_full = GeoSteerings.render(gs, hist_, full=true);
+
+[GeoSteerings.savefig(plot_sim_steps[i], gs.size, joinpath("figs", "$base_img_sim$i.png")) for i in 1:length(hist_)];
+[GeoSteerings.savefig(plot_sim_full[i], gs.size, joinpath("figs", "$base_img_full$i.png")) for i in 1:length(hist_)];
+
+create_side_by_side_gif_from_images(dir="figs", img1_base="SimRollout", img2_base="FullRollout", 
+    gif_name="POMDPPolicy$(policy_num)_WithDrifting.gif", fps=1, num_steps=length(hist_))
+
+```
+
+## Notebooks
+
+Notebook examples are available in [GeoSteeringMDP](https://github.com/mansurarief/GeoSteerings.jl/blob/main/notebooks/GeoSteeringMDP.ipynb) and [GeoSteeringPOMDP](https://github.com/mansurarief/GeoSteerings.jl/blob/main/notebooks/GeoSteeringPOMDP.ipynb).
+

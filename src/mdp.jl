@@ -19,9 +19,9 @@ end
 
 
 function POMDPs.stateindex(mdp::Union{GeoSteeringMDP, GeoSteeringPOMDP}, s::State)
-    id = findfirst(==(s), states(mdp))
+    id = findfirst(==(s), POMDPs.states(mdp))
     if isnothing(id)
-        error("State $s not found in states.")        
+        println("State $s not found in states.")        
         return nothing
     end
     return id

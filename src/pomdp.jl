@@ -10,9 +10,11 @@ function POMDPs.observations(pomdp::GeoSteeringPOMDP)
     surrounding_stats = [el_ for stat_cell in surrounding_stats for el_ in stat_cell]
     
     observations = Vector{Observation}(undef, length(cells)*length(surrounding_stats))
-    for (index, _) in enumerate(cells)
+    index = 1
+    for cell in cells
         for surrounding in surrounding_stats
             observations[index] = Observation(surrounding)
+            index += 1
         end
     end
     return observations

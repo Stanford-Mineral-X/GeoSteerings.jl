@@ -14,7 +14,7 @@ function cell_ctx(xy, size)
     return context(x_offset + (x - 1) * cell_size, y_offset + (ny - y) * cell_size, cell_size, cell_size)
 end
 
-function render_cell(mdp::GeoSteeringMDP, cell::Context, pos::Cell)
+function render_cell(mdp::Union{GeoSteeringPOMDP, GeoSteeringMDP}, cell::Context, pos::Cell)
     if pos in mdp.target_zone
         compose!(cell, Compose.rectangle(), fill(rgb_white), Compose.stroke(rgb_black))
     elseif pos in mdp.shale_zone
@@ -32,13 +32,13 @@ function render_agent(agent::Union{Nothing, Context}, step::Union{NamedTuple,Dic
     compose!(agent, Compose.circle(0.5, 0.5, 0.4), fill(RGBA(1.0, 0.65, 0.0, alpha)))
 end
 
-function render_next_agent(mdp::GeoSteeringMDP, next_agent::Union{Nothing, Context}, step::Union{NamedTuple,Dict})
+function render_next_agent(mdp::Union{GeoSteeringPOMDP, GeoSteeringMDP}, next_agent::Union{Nothing, Context}, step::Union{NamedTuple,Dict})
     if haskey(step, :sp)
         compose!(next_agent, Compose.circle(0.5, 0.5, 0.4), fill(RGBA(1.0, 0.65, 0.0, 0.9)))
     end
 end
 
-function render(mdp::GeoSteeringMDP, step::Union{NamedTuple,Dict}=(;))
+function render(mdp::Union{GeoSteeringPOMDP, GeoSteeringMDP}, step::Union{NamedTuple,Dict}=(;))
     nx, ny = mdp.size
     cells = []
     
@@ -75,7 +75,7 @@ function render(mdp::GeoSteeringMDP, step::Union{NamedTuple,Dict}=(;))
     return compose(context((w - sz) / 2, (h - sz) / 2, sz, sz), agent, next_agent, grid, outline)
 end
 
-function render(mdp::GeoSteeringMDP, hist::SimHistory)
+function render(mdp::Union{GeoSteeringPOMDP, GeoSteeringMDP}, hist::SimHistory)
     render_steps = []
     for step in hist
         push!(render_steps, render(mdp, step))
@@ -84,9 +84,9 @@ function render(mdp::GeoSteeringMDP, hist::SimHistory)
 end
 
 
-tofunc(mdp::GeoSteeringMDP, f) = f
-tofunc(mdp::GeoSteeringMDP, mat::AbstractMatrix) = s -> mat[s...]
-tofunc(mdp::GeoSteeringMDP, v::AbstractVector) = s -> v[stateindex(mdp, s)]
+tofunc(mdp::Union{GeoSteeringPOMDP, GeoSteeringMDP}, f) = f
+tofunc(mdp::Union{GeoSteeringPOMDP, GeoSteeringMDP}, mat::AbstractMatrix) = s -> mat[s...]
+tofunc(mdp::Union{GeoSteeringPOMDP, GeoSteeringMDP}, v::AbstractVector) = s -> v[stateindex(mdp, s)]
 
 function savefig(obj, (w, h), filename; dpi=250)
     #try the draw if the PDF is not installed, otherwise catch error    

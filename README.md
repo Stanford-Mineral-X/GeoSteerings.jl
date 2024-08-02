@@ -1,7 +1,7 @@
 # GeoSteerings.jl
+
 [![CI](https://github.com/mansurarief/GeoSteerings.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/mansurarief/GeoSteerings.jl/actions/workflows/CI.yml)
 [![codecov](https://codecov.io/gh/mansurarief/GeoSteerings.jl/graph/badge.svg?token=4PNXS83ILY)](https://codecov.io/gh/mansurarief/GeoSteerings.jl)
-
 
 This repository contains implementations of GeoSteeringMDP and GeoSteeringPOMDP problems in Julia. *GeoSteering* is a process used in the subsurface exploration industry to guide the wellbore of a drilling operation in real-time, ensuring it stays within a predefined target. This complex problem involves making sequential decisions based on uncertain and incomplete information, which can be effectively modeled using Markov Decision Processes (MDP) and Partially Observable Markov Decision Processes (POMDP).
 
@@ -49,7 +49,7 @@ plot2 = render(gs, hist)
 savefig(plot2, gs.size, "../figs/GeoSteeringPolicyExample.pdf")
 ```
 
-This MDP examples include [GeoSteeringMDP](https://github.com/mansurarief/GeoSteerings.jl/blob/main/notebooks/GeoSteeringMDP.ipynb) and [larger GeoSteeringMDP](https://github.com/mansurarief/GeoSteerings.jl/blob/main/notebooks/GeoSteeringMDP_larger.ipynb)
+MDP examples include [GeoSteeringMDP](https://github.com/mansurarief/GeoSteerings.jl/blob/main/notebooks/GeoSteeringMDP.ipynb) and [larger GeoSteeringMDP](https://github.com/mansurarief/GeoSteerings.jl/blob/main/notebooks/GeoSteeringMDP_larger.ipynb).
 
 ## POMDP Example
 

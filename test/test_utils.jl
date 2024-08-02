@@ -160,3 +160,65 @@ end
     rendered = render_full(pomdp, step)
     @test typeof(rendered) == Context
 end
+
+@testset "Save figs" begin
+    rendered = render_full(pomdp, step)    
+
+    
+    savefig(rendered, pomdp.size, "test.pdf")
+    savefig(rendered, pomdp.size, "test.png")
+    savefig(rendered, pomdp.size, "test.svg")
+
+    @test isfile("test.pdf")
+    @test isfile("test.png")
+    @test isfile("test.svg")
+end
+
+
+@testset "Save gif" begin
+    steps = []
+    num_steps = 2
+    for i in 1:num_steps
+        push!(steps, (s=s, a=RIGHT, sp=s, o=Observation(get_surrounding_status(mdp, s.cell))))
+    end
+
+    rendered = [render_full(pomdp, step) for step in steps]
+
+    for (i, fig) in enumerate(rendered)
+        savefig(fig, pomdp.size, "test$i.png")
+    end
+
+    create_gif_from_images(dir="", gif_name="test.gif", file_base="test", num_steps=num_steps, fps=1)
+
+    @test isfile("test.gif")
+    
+end
+
+@testset "Save gif side_by_side" begin
+    steps = []
+    num_steps = 2
+    for i in 1:num_steps
+        push!(steps, (s=s, a=RIGHT, sp=s, o=Observation(get_surrounding_status(mdp, s.cell))))
+    end
+
+    rendered = [render_full(pomdp, step) for step in steps]
+
+    for (i, fig) in enumerate(rendered)
+        savefig(fig, pomdp.size, "test$i.png")
+    end
+
+    create_side_by_side_gif_from_images(dir="", img1_base="test", img2_base="test", 
+    gif_name="test_side.gif", fps=1, num_steps=num_steps)
+
+    @test isfile("test_side.gif")
+    
+end
+
+#clean up the files
+rm("test.pdf", force=true)
+rm("test.png", force=true)
+rm("test.svg", force=true)
+rm("test.gif", force=true)
+rm("test1.png", force=true)
+rm("test2.png", force=true)
+rm("test_side.gif", force=true)

@@ -115,8 +115,8 @@ function savefig(obj, (w, h), filename; dpi=250)
 end
 
 
-function create_gif_from_images(;dir="figs/", gif_name="SimRollout.gif", num_steps=10, fps=2)
-    image_files = [joinpath(dir, "SimRollout$i.png") for i in 1:num_steps]
+function create_gif_from_images(;dir="figs/", gif_name="SimRollout.gif", num_steps=10, fps=2, file_base="SimRollout")
+    image_files = [joinpath(dir, "$file_base$i.png") for i in 1:num_steps]
     images = [load(img_file) for img_file in image_files]
 
     # Create animation
@@ -125,11 +125,6 @@ function create_gif_from_images(;dir="figs/", gif_name="SimRollout.gif", num_ste
              legend=false, 
              grid=false,          # Disable grid
              ticks=false,         # Disable ticks
-            #  xlims=(0, 1),        # Set limits
-            #  ylims=(0, 1),
-            #  xlabel="",           # Remove x-axis label
-            #  ylabel="",           # Remove y-axis label
-            #  framestyle=:box,     # Box around frame
              size=(500, 500))     # Size of the plot
     end 
 

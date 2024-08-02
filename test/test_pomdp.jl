@@ -50,10 +50,15 @@ obs_dist = POMDPs.observation(pomdp, State(Cell(1, 1), get_surrounding_status(po
 
 
 # Test POMDPs.observation
-@testset "Test POMDPs.obsindex" begin
+@testset "Test POMDPs.observation" begin
     obs_dist = POMDPs.observation(pomdp, State(Cell(1, 1), get_surrounding_status(pomdp, Cell(1, 1))))
     @test typeof(obs_dist) == SparseCat{Vector{Any}, Vector{Float64}}
 
+end
+
+# Test POMDPs.obsindex
+@testset "Test POMDPs.obsindex" begin    
+    @test POMDPs.obsindex(pomdp, 𝒪[1]) == 1
 end
 
 # Test POMDPs.gen

@@ -115,6 +115,17 @@ end
     @test POMDPs.reward(mdp, sp, DOWN, sp_off) == mdp.reward_offtarget 
 end
 
+
+#Test POMDPs.gen
+@testset "Test POMDPs.gen" begin
+    s = State(Cell(1, 1), get_surrounding_status(mdp, Cell(1, 1)))
+    a = RIGHT
+    sp, r = POMDPs.gen(mdp, s, a, mdp.rng)
+    @test typeof(sp) == State
+    @test typeof(r) == Float64
+end
+
+
 # Test POMDPs.discount
 @testset "Test POMDPs.discount" begin
     mdp = create_test_mdp()

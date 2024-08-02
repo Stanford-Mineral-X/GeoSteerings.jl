@@ -1,6 +1,3 @@
-using POMDPs
-using POMDPTools
-using POMDPModels
 using Parameters
 using StaticArrays
 using Distributions
@@ -27,17 +24,16 @@ const Cell=SVector{2,Int}
 
 @with_kw mutable struct State
     cell::Cell
-    is_surface_visited::Vector{Bool}
     is_surrounding_target::Dict{Cell, Bool}
 end
 
-Base.:(==)(s1::State, s2::State) = s1.cell == s2.cell && s1.is_surface_visited == s2.is_surface_visited && s1.is_surrounding_target == s2.is_surrounding_target
+Base.:(==)(s1::State, s2::State) = s1.cell == s2.cell && s1.is_surrounding_target == s2.is_surrounding_target
 
 @with_kw mutable struct Observation
     is_surrounding_target::Dict{Cell, Bool}
 end
 
-function very_similar(o1::Observation, o2::Observation; tol=2)
+function very_similar(o1::Observation, o2::Observation; tol=0)
     o1_surr = o1.is_surrounding_target
     o2_surr = o2.is_surrounding_target
     
@@ -81,6 +77,7 @@ const SURROUNDINGS = Dict(
     discount::Float64               # Discount factor
     reward_target::Float64         # Reward for staying within the target zone
     reward_offtarget::Float64      # Reward for getting out of the target zone
+    reward_goal::Float64            # Reward for reaching the goal
     rng::AbstractRNG                # Random number generator
     target_zone::Set{Cell}         = Set{Cell}() # Set of cells in the target zone
     shale_zone::Set{Cell}           = Set{Cell}() # Set of cells in the shale zone
@@ -102,7 +99,8 @@ end
     discount::Float64               # Discount factor
     reward_target::Float64         # Reward for staying within the target zone
     reward_offtarget::Float64      # Reward for getting out of the target zone
-    similar_obs_prob_multiplier::Float64 # Probability multiplier for true-looking observations
+    reward_goal::Float64            # Reward for reaching the goal
+    obs_tol::Int64 # Probability multiplier for true-looking observations
     rng::AbstractRNG                # Random number generator
     target_zone::Set{Cell}         = Set{Cell}() # Set of cells in the target zone
     shale_zone::Set{Cell}           = Set{Cell}() # Set of cells in the shale zone
@@ -222,16 +220,15 @@ end
 
 function move(mdp::Union{GeoSteeringMDP, GeoSteeringPOMDP}, s::State, a::Action)
     next_cell = s.cell + dir[a]
-    out_of_bound_x = next_cell[1] < 1 || next_cell[1] > length(s.is_surface_visited)
-    out_of_bound_y = next_cell[2] < 1 || next_cell[2] > length(s.is_surface_visited)
+    out_of_bound_x = next_cell[1] < 1 || next_cell[1] > mdp.size[1]
+    out_of_bound_y = next_cell[2] < 1 || next_cell[2] > mdp.size[2]
     if out_of_bound_x || out_of_bound_y 
         return s
     end
-    next_is_surface_visited = collect([b_ for b_ in s.is_surface_visited])
-    next_is_surface_visited[1:s.cell.x + dir[a].x] .= true
+
     next_surrounding_target = get_surrounding_status(mdp, next_cell)
     
-    return State(cell=next_cell, is_surface_visited=next_is_surface_visited, is_surrounding_target=next_surrounding_target)   
+    return State(cell=next_cell, is_surrounding_target=next_surrounding_target)   
 end
     
 function initialize_mdp(;
@@ -247,6 +244,7 @@ function initialize_mdp(;
     discount::Float64               = 0.95, # Discount factor
     reward_target::Float64         = 0.0,
     reward_offtarget::Float64      = -100.0,
+    reward_goal::Float64            = 1000.0,
     rng::AbstractRNG                = Random.GLOBAL_RNG
 )
     mdp = GeoSteeringMDP(
@@ -262,6 +260,7 @@ function initialize_mdp(;
         discount=discount,
         reward_target=reward_target,
         reward_offtarget=reward_offtarget,
+        reward_goal=reward_goal,
         rng=rng
     )
     mdp.target_zone, mdp.nontarget_zone, mdp.shale_zone, mdp.terminal_zone = generate_all_zones(mdp)    
@@ -283,7 +282,8 @@ function initialize_pomdp(;
     discount::Float64               = 0.95, # Discount factor
     reward_target::Float64         = 0.0,
     reward_offtarget::Float64      = -100.0,
-    similar_obs_prob_multiplier    = 5.0,
+    reward_goal::Float64            = 1000.0,
+    obs_tol::Int64                 = 1,
     rng::AbstractRNG                = Random.GLOBAL_RNG
 )
     pomdp = GeoSteeringPOMDP(
@@ -299,7 +299,8 @@ function initialize_pomdp(;
         discount=discount,
         reward_target=reward_target,
         reward_offtarget=reward_offtarget,
-        similar_obs_prob_multiplier=similar_obs_prob_multiplier,
+        reward_goal=reward_goal,
+        obs_tol=obs_tol,
         rng=rng
     )
     pomdp.target_zone, pomdp.nontarget_zone, pomdp.shale_zone, pomdp.terminal_zone = generate_all_zones(pomdp)    

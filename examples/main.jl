@@ -1,6 +1,6 @@
-include("../src/geosteering.jl")
-include("../src/mdp.jl")
-include("../src/utils.jl")
+using POMDPs
+using GeoSteerings
+using Random
 
 rng = MersenneTwister(1)
 gs = initialize_mdp(
@@ -40,7 +40,7 @@ r = reward(gs, s, a, sp) # reward r
 
 
 #plot the initial state
-plt = render(gs, (s=s,a=a,sp=sp))
-savefig(plt, gs.size, "figs/MDP-1step-simulation.pdf")
+plt = GeoSteerings.render(gs, (s=s,a=a,sp=sp))
+GeoSteerings.savefig(plt, gs.size, "figs/MDP-1step-simulation.pdf")
 
 

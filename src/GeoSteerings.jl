@@ -56,7 +56,15 @@ export
     render_next_agent,
     render,
     savefig,
-    create_gif_from_images
+    create_gif_from_images,
+    pomdp2mdp,
+    render_full,
+    render_current_pos,
+    render_observation,
+    create_side_by_side_gif_from_images
 include("utils.jl")
+
+include("mdp.jl")
+include("pomdp.jl")
 
 end # module GeoSteerings
